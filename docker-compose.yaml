@@ -15,67 +15,59 @@ services:
       - ./initdb:/docker-entrypoint-initdb.d
     networks:
       - sosmed
-  # auth-service:
-  #   build:
-  #     context: ./auth-service
-  #     dockerfile: ./Dockerfile
-  #   container_name: auth-service
-  #   environment:
-  #     - GO_ENV=development
-  #     - HTTP_PORT=auth-service:8080
-  #     - GRPC_PORT=auth-service:50051
-  #     - ACCOUNT_SERVICE_URL=account-service:50052
-  #     - DB_HOST=sosmeddb
-  #     - DB_PORT=5432
-  #     - DB_USER=sosmed
-  #     - DB_PASS=sosmed
-  #     - DB_NAME=authdb
-  #     - DB_SSLMODE=disable
-  #     - JWT_SECRET=secret
-  #   ports:
-  #     - '8080:8080'
-  #     - '50051:50051'
-  #   depends_on:
-  #     - sosmeddb
-  #     - account-service
-  #   networks:
-  #     - sosmed
-  #   restart: on-failure
-  # account-service:
-  #   build:
-  #     context: ./account-service
-  #     dockerfile: ./Dockerfile
-  #   container_name: account-service
-  #   environment:
-  #     - GO_ENV=development
-  #     - HTTP_PORT=account-service:8081
-  #     - GRPC_PORT=account-service:50052
-  #     - DB_HOST=sosmeddb
-  #     - DB_PORT=5432
-  #     - DB_USER=sosmed
-  #     - DB_PASS=sosmed
-  #     - DB_NAME=accountdb
-  #     - DB_SSLMODE=disable
-  #   ports:
-  #     - '8082:8082'
-  #     - '50052:50052'
-  #   depends_on:
-  #     - sosmeddb
-  #   networks:
-  #     - sosmed
-  #   restart: on-failure
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: ./Dockerfile
+    container_name: auth-service
+    environment:
+      - GO_ENV=development
+      - HTTP_PORT=auth-service:8080
+      - GRPC_PORT=auth-service:50051
+      - ACCOUNT_SERVICE_URL=account-service:50052
+      - DB_HOST=sosmeddb
+      - DB_PORT=5432
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=authdb
+      - DB_SSLMODE=disable
+      - JWT_SECRET=${JWT_SECRET}
+    ports:
+      - '8080:8080'
+      - '50051:50051'
+    depends_on:
+      - sosmeddb
+      - account-service
+    networks:
+      - sosmed
+    restart: on-failure
+  account-service:
+    build:
+      context: ./account-service
+      dockerfile: ./Dockerfile
+    container_name: account-service
+    environment:
+      - GO_ENV=development
+      - HTTP_PORT=account-service:8081
+      - GRPC_PORT=account-service:50052
+      - DB_HOST=sosmeddb
+      - DB_PORT=5432
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=accountdb
+      - DB_SSLMODE=disable
+    ports:
+      - '8082:8082'
+      - '50052:50052'
+    depends_on:
+      - sosmeddb
+    networks:
+      - sosmed
+    restart: on-failure
 
   elasticsearch:
     container_name: elasticsearch
     image: docker.elastic.co/elasticsearch/elasticsearch:8.7.1
-    # environment:
-    #   [
-    #     'CLI_JAVA_OPTS=-Xms2g -Xmx2g',
-    #     'bootstrap.memory_lock=true',
-    #     'discovery.type=single-node',
-    #     'xpack.security.enabled=false',
-    #     'xpack.security.enrollment.enabled=false',
-    #   ]
     environment:
       - discovery.type=single-node
       - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
