@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package account;
+
+option go_package = "internal/grpc";
+
+import "google/annotations.proto";
+import "auth/auth.proto";
+
+service AccountService {
+  rpc InsertUser (InsertUserRequest) returns (auth.Empty) {
+    option (google.api.http) = {
+      post: "/api/v1/account/user"
+      body: "*"
+    };
+  }
+
+  rpc GetAccountByEmailAndUsername (GetAccountByEmailAndUsernameRequest) returns (GetAccountByEmailAndUsernameResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/account/user"
+    };
+  }
+}
+
+message InsertUserRequest {
+  string user_id = 1;
+  string full_name = 2;
+  string username = 3;
+  string email = 4;
+  string password = 5;
+}
+
+message GetAccountByEmailAndUsernameRequest {
+  string email = 1;
+  string username = 2;
+  string password = 3;
+}
+
+message GetAccountByEmailAndUsernameResponse {
+  string user_id = 1;
+  string full_name = 2;
+  string username = 3;
+  string email = 4;
+  string password = 5;
+}

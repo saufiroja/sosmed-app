@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "internal/grpc";
+
+import "google/annotations.proto";
+
+service AuthService {
+   rpc Register(RegisterRequest) returns (Empty) {
+        option (google.api.http) = {
+        post: "/api/v1/auth/register"
+        body: "*"
+        };
+    }
+    rpc Login(LoginRequest) returns (Response) {
+        option (google.api.http) = {
+        post: "/api/v1/auth/login"
+        body: "*"
+        };
+    }
+    rpc RefreshToken(RefreshTokenRequest) returns (Response) {
+        option (google.api.http) = {
+        post: "/api/v1/auth/refresh"
+        body: "*"
+        };
+    }
+
+    rpc GoogleAuth(Empty) returns (GoogleAuthResponse) {
+        option (google.api.http) = {
+        get: "/api/v1/auth/google"
+        };
+    }
+
+    rpc GoogleAuthCallback(GoogleAuthCallbackRequest) returns (Response) {
+        option (google.api.http) = {
+        get: "/api/v1/auth/google/callback"
+        };
+    }
+}
+
+message LoginRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+  string account_type = 4;
+}
+
+message RegisterRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+  string full_name = 4;
+  string account_type = 5;
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message Response {
+  string access_token = 1;
+  string refresh_token = 2;
+}
+
+message GoogleAuthCallbackRequest {
+  string code = 1;
+}
+
+message GoogleAuthResponse{
+  string url = 1;
+}
+
+message Empty {}
