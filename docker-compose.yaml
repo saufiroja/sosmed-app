@@ -4,8 +4,8 @@ services:
     image: postgres:15
     container_name: sosmeddb
     environment:
-      POSTGRES_USER: sosmed
-      POSTGRES_PASSWORD: sosmed
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_DB: sosmed
       POSTGRES_HOST_AUTH_METHOD: trust
     ports:
