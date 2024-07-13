@@ -10,6 +10,7 @@ import (
 	"github.com/saufiroja/sosmed-app/auth-service/internal/services"
 	"github.com/saufiroja/sosmed-app/auth-service/internal/utils"
 	"github.com/saufiroja/sosmed-app/auth-service/pkg/database"
+	"github.com/saufiroja/sosmed-app/auth-service/pkg/messaging"
 	"google.golang.org/grpc"
 
 	"github.com/sirupsen/logrus"
@@ -28,6 +29,7 @@ func (m *Module) Initialize(conf *config.AppConfig, logger *logrus.Logger, conn 
 	googleAuth := utils.NewGoogleAuth(conf)
 	// utils
 	generateToken := utils.NewGenerateToken(conf)
+	KafkaProducer := messaging.NewKafkaProducer(conf, logger)
 	// client
 	accountClient := internalGrpc.NewAccountServiceClient(conn)
 	// Register the database
@@ -35,7 +37,7 @@ func (m *Module) Initialize(conf *config.AppConfig, logger *logrus.Logger, conn 
 	// Register the repository
 	authRepository := repositories.NewAuthRepository(db)
 	// Register the service
-	authService := services.NewAuthService(authRepository, logger, db, generateToken, accountClient, googleAuth, conf)
+	authService := services.NewAuthService(authRepository, logger, db, generateToken, accountClient, googleAuth, conf, KafkaProducer)
 	// handler command
 	registerHandler := command.NewRegisterCommandHandler(authService, logger)
 	loginHandler := command.NewLoginCommandHandler(authService, logger)

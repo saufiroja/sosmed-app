@@ -26,11 +26,13 @@ type AppConfig struct {
 	AccountService struct {
 		URL string
 	}
-
 	GoogleAuth struct {
 		GoogleOauthClientId     string
 		GoogleOauthClientSecret string
 		GoogleOauthRedirectUrl  string
+	}
+	KafkaBroker struct {
+		URL string
 	}
 }
 
@@ -47,6 +49,7 @@ func NewAppConfig() *AppConfig {
 		initHttp(appConfig)
 		initPostgres(appConfig)
 		initGoogleAuth(appConfig)
+		initKafkaClient(appConfig)
 	}
 
 	return appConfig

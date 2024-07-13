@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"github.com/saufiroja/sosmed-app/auth-service/internal/repositories"
 	"github.com/saufiroja/sosmed-app/auth-service/internal/utils"
 	"github.com/saufiroja/sosmed-app/auth-service/pkg/database"
+	"github.com/saufiroja/sosmed-app/auth-service/pkg/messaging"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -28,6 +30,7 @@ type authService struct {
 	accountClient  internalGrpc.AccountServiceClient
 	googleAuth     *utils.GoogleAuth
 	conf           *config.AppConfig
+	kafkaProducer  *messaging.KafkaProducer
 }
 
 func NewAuthService(
@@ -38,6 +41,7 @@ func NewAuthService(
 	accountClient internalGrpc.AccountServiceClient,
 	googleAuth *utils.GoogleAuth,
 	conf *config.AppConfig,
+	kafkaProducer *messaging.KafkaProducer,
 ) AuthServiceInterface {
 	return &authService{
 		authRepository: authRepository,
@@ -47,6 +51,7 @@ func NewAuthService(
 		accountClient:  accountClient,
 		googleAuth:     googleAuth,
 		conf:           conf,
+		kafkaProducer:  kafkaProducer,
 	}
 }
 
@@ -89,6 +94,15 @@ func (a *authService) Register(ctx context.Context, request *requests.RegisterRe
 	}
 
 	a.db.CommitTransaction(tx)
+
+	// struct to string
+	userByt, err := json.Marshal(insertUser)
+	if err != nil {
+		return err
+	}
+
+	// publish to kafka
+	a.kafkaProducer.Publish(messaging.InsertUserTopic, userByt)
 
 	return nil
 }
