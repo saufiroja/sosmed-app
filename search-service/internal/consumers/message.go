@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/saufiroja/sosmed/search-service/internal/models"
@@ -33,9 +32,9 @@ func (c *Consumer) Start() {
 }
 
 func (c *Consumer) startInsertUserConsumer() {
-	err := c.KafkaConsumer.SubscribeTopic(messaging.InsertUserTopic)
-	if err != nil {
-		c.logger.Error("failed to subscribe to topic")
+	if err := c.KafkaConsumer.SubscribeTopic(messaging.InsertUserTopic); err != nil {
+		c.logger.Error("Failed to subscribe to topic: ", err)
+		return
 	}
 
 	run := true
@@ -44,28 +43,33 @@ func (c *Consumer) startInsertUserConsumer() {
 		ev := c.KafkaConsumer.KafkaConsumer.Poll(100)
 		switch e := ev.(type) {
 		case *kafka.Message:
-			// application-specific processing
-			c.logger.Info("message received")
-			var user models.User
-			err := json.Unmarshal(e.Value, &user)
-			if err != nil {
-				c.logger.Error("failed to unmarshal message")
-			}
-
-			ctx := context.Background()
-			err = c.userService.InsertUser(ctx, &user)
-			if err != nil {
-				c.logger.Error("failed to insert user ", err)
-			}
-
-			c.logger.Info("user inserted")
+			c.processMessage(e)
 		case kafka.Error:
-			fmt.Fprintf(os.Stderr, "%% Error: %v\n", e)
+			c.logger.Error(fmt.Sprintf("Kafka error: %v", e))
 			run = false
 		default:
-			fmt.Printf("Ignored %v\n", e)
+			c.logger.Debug(fmt.Sprintf("Ignored event: %v", e))
 		}
 	}
 
-	c.KafkaConsumer.Close()
+	if err := c.KafkaConsumer.Close(); err != nil {
+		c.logger.Error("Failed to close Kafka consumer: ", err)
+	}
+}
+
+func (c *Consumer) processMessage(message *kafka.Message) {
+	c.logger.Info("Message received")
+	var user models.User
+	if err := json.Unmarshal(message.Value, &user); err != nil {
+		c.logger.Error("Failed to unmarshal message: ", err)
+		return
+	}
+
+	ctx := context.Background()
+	if err := c.userService.InsertUser(ctx, &user); err != nil {
+		c.logger.Error("Failed to insert user: ", err)
+		return
+	}
+
+	c.logger.Info("User inserted successfully")
 }
