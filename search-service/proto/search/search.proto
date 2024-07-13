@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package search;
+
+option go_package = "internal/grpc";
+
+import "google/annotations.proto";
+
+service SearchService {
+  rpc SearchUserByUsername(SearchUserByUsernameRequest) returns (SearchUserByUsernameResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/search/user"
+    };
+  }
+  rpc SearchAllUsers(SearchAllUsersRequest) returns (SearchAllUsersResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/search/users"
+    };
+  }
+}
+
+message SearchUserByUsernameRequest {
+  string username = 1;
+}
+
+message SearchUserByUsernameResponse {
+  string username = 1;
+  string full_name = 2;
+  string user_id = 3;
+}
+
+message SearchAllUsersRequest {
+  int32 page = 1;
+  int32 limit = 2;
+}
+
+message SearchAllUsersResponse {
+  repeated GetAllUsers users = 1;
+}
+
+message GetAllUsers {
+  string username = 1;
+  string full_name = 2;
+  string user_id = 3;
+}

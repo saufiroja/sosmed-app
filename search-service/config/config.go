@@ -16,6 +16,9 @@ type AppConfig struct {
 		Host string
 		Port string
 	}
+	KafkaClient struct {
+		URL string
+	}
 }
 
 var appConfig *AppConfig
@@ -30,6 +33,7 @@ func NewAppConfig() *AppConfig {
 		initApp(appConfig)
 		initServer(appConfig)
 		initElasticsearch(appConfig)
+		initKafkaClient(appConfig)
 	}
 
 	return appConfig
