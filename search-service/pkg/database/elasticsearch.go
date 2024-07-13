@@ -15,7 +15,7 @@ func NewElasticsearch(conf *config.AppConfig, logger *logrus.Logger) *Elasticsea
 	client, err := esv8.NewClient(
 		esv8.Config{
 			Addresses: []string{
-				"http://localhost:9200",
+				conf.Elasticsearch.URL,
 			},
 		},
 	)

@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/saufiroja/sosmed/search-service/internal/models"
 	"github.com/saufiroja/sosmed/search-service/internal/services"
 	"github.com/saufiroja/sosmed/search-service/pkg/messaging"
@@ -36,24 +38,34 @@ func (c *Consumer) startInsertUserConsumer() {
 		c.logger.Error("failed to subscribe to topic")
 	}
 
-	for {
-		c.logger.Info("waiting for message...")
-		msg, err := c.KafkaConsumer.KafkaConsumer.ReadMessage(-1)
-		if err != nil {
-			c.logger.Error("failed to read message")
-		}
+	run := true
 
-		var user models.User
-		if err := json.Unmarshal(msg.Value, &user); err != nil {
-			c.logger.Error("failed to unmarshal message")
-			return
-		}
+	for run {
+		ev := c.KafkaConsumer.KafkaConsumer.Poll(100)
+		switch e := ev.(type) {
+		case *kafka.Message:
+			// application-specific processing
+			c.logger.Info("message received")
+			var user models.User
+			err := json.Unmarshal(e.Value, &user)
+			if err != nil {
+				c.logger.Error("failed to unmarshal message")
+			}
 
-		if err := c.userService.InsertUser(context.Background(), &user); err != nil {
-			c.logger.Error(fmt.Sprintf("failed to insert user, err: %v", err))
-			return
-		}
+			ctx := context.Background()
+			err = c.userService.InsertUser(ctx, &user)
+			if err != nil {
+				c.logger.Error("failed to insert user ", err)
+			}
 
-		c.logger.Info(fmt.Sprintf("user inserted: %v", user))
+			c.logger.Info("user inserted")
+		case kafka.Error:
+			fmt.Fprintf(os.Stderr, "%% Error: %v\n", e)
+			run = false
+		default:
+			fmt.Printf("Ignored %v\n", e)
+		}
 	}
+
+	c.KafkaConsumer.Close()
 }

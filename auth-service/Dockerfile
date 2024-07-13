@@ -1,4 +1,6 @@
-FROM golang:1.22-alpine AS builder
+FROM golang:1.22.1-alpine AS builder
+
+RUN apk add alpine-sdk 
 
 WORKDIR /app
 
@@ -7,17 +9,15 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o auth-service ./cmd
+RUN GOOS=linux GOARCH=amd64 go build -tags musl -o auth-service ./cmd
 
 # Path: Dockerfile
-FROM alpine:latest
+FROM alpine:3.14
 
 RUN apk update && apk add --no-cache ca-certificates
 
 WORKDIR /app
 
 COPY --from=builder /app/auth-service .
-
-EXPOSE 8080
 
 CMD ["./auth-service"]

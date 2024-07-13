@@ -13,8 +13,7 @@ type AppConfig struct {
 		Port string
 	}
 	Elasticsearch struct {
-		Host string
-		Port string
+		URL string
 	}
 	KafkaClient struct {
 		URL string
