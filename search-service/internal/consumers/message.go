@@ -37,23 +37,16 @@ func (c *Consumer) startInsertUserConsumer() {
 		return
 	}
 
-	run := true
-
-	for run {
+	for {
 		ev := c.KafkaConsumer.KafkaConsumer.Poll(100)
 		switch e := ev.(type) {
 		case *kafka.Message:
 			c.processMessage(e)
 		case kafka.Error:
 			c.logger.Error(fmt.Sprintf("Kafka error: %v", e))
-			run = false
 		default:
 			c.logger.Debug(fmt.Sprintf("Ignored event: %v", e))
 		}
-	}
-
-	if err := c.KafkaConsumer.Close(); err != nil {
-		c.logger.Error("Failed to close Kafka consumer: ", err)
 	}
 }
 
